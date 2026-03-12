@@ -1,0 +1,15 @@
+*.pyc
+__pycache__/
+*.slp
+*.egg-info/
+dist/
+build/
+.ipynb_checkpoints/
+*.png
+*.jpg
+*.pdf
+!Melee*.pdf
+venv/
+.env
+data/
+results/
