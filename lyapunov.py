@@ -31,7 +31,8 @@ class LyapunovAnalyzer:
     def compute_max_lyapunov_exponent(self, embedding_dim: int = 3,
                                      tau: int = 1,
                                      min_separation: float = 1e-5,
-                                     max_separation: float = 10.0) -> float:
+                                     max_separation: float = 10.0,
+                                     max_samples: int = 1000) -> float:
         """
         Computes the maximum Lyapunov exponent λ using the average divergence method.
 
@@ -47,10 +48,13 @@ class LyapunovAnalyzer:
             tau: Time delay for embedding
             min_separation: Minimum initial separation
             max_separation: Maximum initial separation
+            max_samples: Maximum number of sample points (for performance)
 
         Returns:
             float: Maximum Lyapunov exponent
         """
+        from tqdm import tqdm
+
         # Use distance-based approach on the relative manifold
         distances = self._compute_distances()
 
@@ -58,19 +62,26 @@ class LyapunovAnalyzer:
         if n < 100:
             return 0.0
 
+        # Subsample for performance - use every Nth frame
+        if n > max_samples:
+            step = n // max_samples
+            sample_indices = list(range(0, n - 50, step))
+        else:
+            sample_indices = list(range(n - 50))
+
         # Compute divergence rates
         divergence_rates = []
 
-        for i in range(n - 50):  # Need enough future frames
-            # Find nearby trajectories
-            for j in range(i + 10, min(i + 100, n - 50)):
+        for i in tqdm(sample_indices, desc="Computing Lyapunov", unit="samples", leave=False):
+            # Find nearby trajectories (limited search)
+            for j in range(i + 10, min(i + 50, n - 50), 5):  # Skip every 5 frames
                 initial_sep = abs(distances[i] - distances[j])
 
                 if min_separation < initial_sep < max_separation:
-                    # Track divergence over time
-                    max_time = min(50, n - max(i, j))
+                    # Track divergence over time (limited horizon)
+                    max_time = min(20, n - max(i, j))  # Reduced from 50 to 20
 
-                    for t in range(1, max_time):
+                    for t in range(1, max_time, 2):  # Skip every other frame
                         separation_t = abs(distances[i + t] - distances[j + t])
 
                         if separation_t > min_separation:

@@ -12,6 +12,7 @@ import os
 import math
 from typing import List, Tuple, Optional
 from slippi import Game
+from tqdm import tqdm
 
 
 # Define the acceptable internal Action State IDs for neutral gameplay
@@ -67,7 +68,8 @@ def extract_neutral_distances(replay_dir: str) -> List[float]:
     neutral_distances = []
 
     # Iterate through all replay files in the target directory
-    for filename in os.listdir(replay_dir):
+    slp_files = [f for f in os.listdir(replay_dir) if f.endswith('.slp')]
+    for filename in tqdm(slp_files, desc="Extracting distances", unit="file"):
         if not filename.endswith('.slp'):
             continue
 
@@ -114,7 +116,8 @@ def extract_full_telemetry(replay_dir: str) -> Tuple[List[dict], List[dict]]:
     player1_data = []
     player2_data = []
 
-    for filename in os.listdir(replay_dir):
+    slp_files = [f for f in os.listdir(replay_dir) if f.endswith('.slp')]
+    for filename in tqdm(slp_files, desc="Extracting telemetry", unit="file"):
         if not filename.endswith('.slp'):
             continue
 
